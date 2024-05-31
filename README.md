@@ -98,3 +98,4 @@ The cli is pretty simple: a comma separated list of interfaces (no spaces!) the 
 
 - Testing and proper CI. Can be done using two containers connected through a veth pair, asserting the content of the neighbor table.
 - IPv6 support
+- Think about having a local neighbor refresh policy: ideally, we should periodically ping / arping the interface to ensure the entry is maintained.
