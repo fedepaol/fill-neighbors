@@ -23,15 +23,17 @@ char __license[] SEC("license") = "Dual MIT/GPL";
 #define TC_ACT_OK 0
 #define TC_ACT_SHOT -1
 
-struct event {
+struct event
+{
   u8 senderHWvalue[MAC_LEN];
   u8 senderProtoValue[IP_LEN];
   __u32 opCode;
 };
 
-struct {
-	__uint(type, BPF_MAP_TYPE_RINGBUF);
-	__uint(max_entries, 1 << 24);
+struct
+{
+  __uint(type, BPF_MAP_TYPE_RINGBUF);
+  __uint(max_entries, 1 << 24);
 } events SEC(".maps");
 
 const struct event *unused __attribute__((unused));
@@ -59,7 +61,7 @@ int arpReflect(struct __sk_buff *skb)
 
   struct arphdr *arph;
   arph = data + sizeof(struct ethhdr);
-  if ((void*)(arph + 1) > data_end)
+  if ((void *)(arph + 1) > data_end)
   {
     bpf_printk("malformed 0");
     return TC_ACT_SHOT;
@@ -69,20 +71,22 @@ int arpReflect(struct __sk_buff *skb)
   __u16 plen = arph->ar_pln;
   __u32 opCode = bpf_ntohs(arph->ar_op);
 
-  if (hlen > MAC_LEN) {
-	  hlen = MAC_LEN;
+  if (hlen > MAC_LEN)
+  {
+    hlen = MAC_LEN;
   }
-  if (plen > IP_LEN) {
-	  plen = IP_LEN;
+  if (plen > IP_LEN)
+  {
+    plen = IP_LEN;
   }
 
-  void* senderHwAddress = (void*)arph + sizeof(struct arphdr);
+  void *senderHwAddress = (void *)arph + sizeof(struct arphdr);
   if ((senderHwAddress + hlen) > data_end)
   {
     bpf_printk("malformed 0");
     return TC_ACT_SHOT;
   }
-  void* senderProtoAddress = senderHwAddress + hlen;
+  void *senderProtoAddress = senderHwAddress + hlen;
   if ((senderProtoAddress + plen) > data_end)
   {
     bpf_printk("malformed 0");
@@ -92,12 +96,13 @@ int arpReflect(struct __sk_buff *skb)
   struct event *arp_event;
 
   arp_event = bpf_ringbuf_reserve(&events, sizeof(struct event), 0);
-  if (!arp_event) {
+  if (!arp_event)
+  {
     return 0;
   }
 
-  bpf_core_read_str(arp_event->senderHWvalue, hlen+1, senderHwAddress);
-  bpf_core_read_str(arp_event->senderProtoValue, plen+1, senderProtoAddress);
+  bpf_core_read_str(arp_event->senderHWvalue, hlen + 1, senderHwAddress);
+  bpf_core_read_str(arp_event->senderProtoValue, plen + 1, senderProtoAddress);
   arp_event->opCode = opCode;
 
   bpf_ringbuf_submit(arp_event, 0);
